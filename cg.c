@@ -1,3 +1,12 @@
+/*
+                           
+ Universidade Federal da Bahia             
+ Computação Grafica        
+                                               
+ Daniel Lopes                    
+ Daniel Fernandes                   
+
+*/
 //This program loads 3-channel BMP
 #include <GL/glut.h>
 #include <math.h>
@@ -34,6 +43,8 @@ typedef struct BITMAPFULLHEADER {
 } BITMAPFULLHEADER;
 #pragma pack(0)
 
+#define M_PI 3.14159265358979323846
+
 // BMP HEADER
 BITMAPFULLHEADER header;
 
@@ -42,9 +53,12 @@ unsigned char *data;               // loaded image
 unsigned char *data_filtro;        // loaded image
 unsigned char *data_equaliza;      // loaded image
 
+float Gx(float ro, float x){
+  return (1/(2*M_PI*ro*ro))*exp((-(x*x))/(2*ro*ro));
+}
+
+
 // dynamic programming to improve performance
-
-
 int loadBMP(const char *imagepath) {
   // Open the file
   FILE *file = fopen(imagepath, "rb");
@@ -105,20 +119,19 @@ int loadBMP(const char *imagepath) {
   FILE* saida;
   
   //filtro bilateral
-
-
-
   file = fopen(imagepath, "rb");
   fseek(file, dataPos, SEEK_SET);
   fread(data_filtro, 1, imageSize, file);
 
   for(int i = 0; i < width * height ; i++){
    int index = i*3;
-   B = data_equaliza[index];
-   R = data_equaliza[index+2];
-   data_equaliza[index] = R;
-   data_equaliza[index+2] = B;
+   B = data_filtro[index];
+   R = data_filtro[index+2];
+   data_filtro[index] = R;
+   data_filtro[index+2] = B;
   }
+
+  
 
   saida = fopen("saida_bilateral.bmp","wb");
   fwrite(&header, sizeof(BITMAPFULLHEADER), sizeof(header), saida);
