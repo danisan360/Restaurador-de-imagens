@@ -90,10 +90,23 @@ int loadBMP(const char *imagepath) {
     return 1;
   }
 
+  // copying components BGR to RGB
+  unsigned char B,R;
+  for(int i = 0; i < width * height ; i++){
+   int index = i*3;
+   B = data[index];
+   R = data[index+2];
+   data[index] = R;
+   data[index+2] = B;
+  }
+
   
   FILE* saida;
   
   //filtro bilateral
+
+
+
 
   data_filtro = data;
 
@@ -110,10 +123,11 @@ int loadBMP(const char *imagepath) {
   int widthImage = header.bmpinfo.width;
   int total_pixels = height * width;
 
-  for(int i = 0; i < heightImage; i++){
-    for(int j = 0; j < widthImage; j++){
-      hist[(int)data_equaliza[j + widthImage*i]] += 1;
-    }
+
+  for(int i = 0; i < width * height; i++){
+   int index = i*3;
+   int media = ((int)data_equaliza[index] + (int)data_equaliza[index+1] + (int)data_equaliza[index+2])/3;
+   hist[media] += 1;
   }
 
   int curr = 0;
@@ -123,17 +137,16 @@ int loadBMP(const char *imagepath) {
     new_hist[i] = round((((float)curr) * 255) / total_pixels);
   }
 
-  for(int i = 0; i < heightImage; i++){
-    for(int j = 0; j < widthImage; j++){
-      data_equaliza[j + widthImage*i] = (unsigned char)new_hist[data_equaliza[j + widthImage*i]];
-      //image[col] = (unsigned char)new_gray_level[image[col]];
-    }
+  for(int i = 0; i < width * height * 3; i++){
+   data_equaliza[i] = ((unsigned char)new_hist[data_equaliza[i]]);
   }
 
   saida = fopen("saida_bilateral_e_equalizada.bmp","wb");
   fwrite(&header, sizeof(BITMAPFULLHEADER), sizeof(header), saida);
   fseek(saida, dataPos, SEEK_SET);
   fwrite(data, imageSize, 1,saida);
+
+  data_equaliza = data;
 
   fclose(saida);
   fclose(file);
