@@ -44,6 +44,7 @@ unsigned char *data_equaliza;      // loaded image
 
 // dynamic programming to improve performance
 
+
 int loadBMP(const char *imagepath) {
   // Open the file
   FILE *file = fopen(imagepath, "rb");
@@ -107,8 +108,17 @@ int loadBMP(const char *imagepath) {
 
 
 
+  file = fopen(imagepath, "rb");
+  fseek(file, dataPos, SEEK_SET);
+  fread(data_filtro, 1, imageSize, file);
 
-  data_filtro = data;
+  for(int i = 0; i < width * height ; i++){
+   int index = i*3;
+   B = data_equaliza[index];
+   R = data_equaliza[index+2];
+   data_equaliza[index] = R;
+   data_equaliza[index+2] = B;
+  }
 
   saida = fopen("saida_bilateral.bmp","wb");
   fwrite(&header, sizeof(BITMAPFULLHEADER), sizeof(header), saida);
@@ -116,7 +126,18 @@ int loadBMP(const char *imagepath) {
   fwrite(data_filtro, imageSize, 1,saida);
 
   //Equalização
-  data_equaliza = data_filtro;
+  file = fopen("saida_bilateral.bmp","rb");
+  fseek(file, dataPos, SEEK_SET);
+  fread(data_equaliza, 1, imageSize, file);
+
+  for(int i = 0; i < width * height ; i++){
+   int index = i*3;
+   B = data_equaliza[index];
+   R = data_equaliza[index+2];
+   data_equaliza[index] = R;
+   data_equaliza[index+2] = B;
+  }
+
   int hist[256] = { 0 }; 
   int new_hist[256] = { 0 }; 
   int heightImage = header.bmpinfo.height;
@@ -144,9 +165,8 @@ int loadBMP(const char *imagepath) {
   saida = fopen("saida_bilateral_e_equalizada.bmp","wb");
   fwrite(&header, sizeof(BITMAPFULLHEADER), sizeof(header), saida);
   fseek(saida, dataPos, SEEK_SET);
-  fwrite(data, imageSize, 1,saida);
+  fwrite(data_equaliza, imageSize, 1,saida);
 
-  data_equaliza = data;
 
   fclose(saida);
   fclose(file);
